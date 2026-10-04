@@ -1,5 +1,7 @@
 # chrome2kodi
 
+[![tests](https://github.com/hugoocoto/chrome2kodi/actions/workflows/tests.yml/badge.svg)](https://github.com/hugoocoto/chrome2kodi/actions/workflows/tests.yml)
+
 A Chrome extension: right-click a picture, video, song or link and pick **Send to Kodi** to play it now, or **Queue on Kodi** to add it to the end of Kodi's queue. It plays on the TV through [send2kodi](https://github.com/hugoocoto/send2kodi), so it handles everything that does: YouTube through the YouTube add-on, links to media files directly, and anything else yt-dlp knows through SendToKodi.
 
 | You right-click | Kodi gets |
@@ -31,6 +33,16 @@ installs the small program the extension runs send2kodi through (a [native messa
 - YouTube shows its own menu on right-click on a video; right-click again for the browser's. Or right-click the video's link or thumbnail, or use the toolbar button.
 - Kodi fetches what you send by itself, without your browser's cookies, so pictures and videos behind a login won't play.
 - Pictures are served from this computer for as long as they are on screen, by a send2kodi in the background.
+
+## Tests
+
+`tests/` runs the native host and the installer against a stand-in send2kodi, and the extension's background script in Node against a stand-in for Chrome's API. Nothing goes to Kodi.
+
+```sh
+python3 -m unittest discover tests
+```
+
+GitHub Actions runs them on Python 3.9 and 3.14 for every push to `main` and every pull request.
 
 ## License
 
