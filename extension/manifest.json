@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "chrome2kodi",
+  "version": "0.1.0",
+  "description": "Right-click a picture, video, audio or link and send it to Kodi, with send2kodi.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAujXSW/G9ETgBhlTuMMS0qCqy4qM42jGcaVkIkowDUeRHOmlcLaHAvqJVQdKi9T4ri4yLSLJq5nmGoJqGYL58UtwzcrfwwjARp6r9ICJYq8UQawHjXCjkj9StiKKRc3YE+GHjgb592hFHRAAMvVl+kXW38AMJjMtLGdRHpsAhSXWG6iFQYLl5BBDsKqbFeU3oj56yKrTAG8tIw49FvfsNL/Bpkjy94OTNbh2VHUCiJ2Hqm+29oHqZxA3rpwmw62/jA8QpcIGDohn7CxEkyph0wsdGfg6j6rnnecMf/MD0pZwWt+aeeyoRBMQIyLz2Mio0FkxwNHZfOlMsKMO+CFWBUQIDAQAB",
+  "permissions": ["contextMenus", "nativeMessaging", "notifications"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Send this page to Kodi"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}
