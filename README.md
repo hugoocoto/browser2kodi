@@ -31,3 +31,7 @@ installs the small program the extension runs send2kodi through (a [native messa
 - YouTube shows its own menu on right-click on a video; right-click again for the browser's. Or right-click the video's link or thumbnail, or use the toolbar button.
 - Kodi fetches what you send by itself, without your browser's cookies, so pictures and videos behind a login won't play.
 - Pictures are served from this computer for as long as they are on screen, by a send2kodi in the background.
+
+## License
+
+[MIT](LICENSE) © Hugo Coto
