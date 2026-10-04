@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { before, beforeEach, describe, test } from "node:test";
-import { timing } from "../extension/kodi.js";
+import { proxied, timing } from "../extension/kodi.js";
 import { FakeKodi, fakeChrome } from "./fakes.js";
 
 Object.assign(timing, { poll: 0, timeout: 50 });
@@ -71,8 +71,9 @@ describe("what is sent", () => {
      "plugin://plugin.video.youtube/play/?video_id=jNQXAC9IVRw"],
     [{ linkUrl: "https://youtu.be/jNQXAC9IVRw" }, "plugin://plugin.video.youtube/play/?video_id=jNQXAC9IVRw"],
     [{}, "plugin://plugin.video.sendtokodi/?https://page/"],
-    // A picture without an extension: a picture still, as the page shows it.
-    [{ mediaType: "image", srcUrl: "https://img/proxy?u=1" }, "https://img/proxy?u=1"],
+    // A picture without an extension, like an image search's thumbnails.
+    [{ mediaType: "image", srcUrl: "https://tse1.mm.bing.net/th?id=OIP.1" },
+     proxied("https://tse1.mm.bing.net/th?id=OIP.1")],
   ];
   for (const [info, file] of cases) {
     test(JSON.stringify(info), async () => {
@@ -98,8 +99,9 @@ describe("what is sent", () => {
 
   test("pictures inlined in the page", async () => {
     await click({ mediaType: "image", srcUrl: "data:image/png;base64,AAAA" });
-    assert.deepEqual(chrome.notes, [["Can't send this to Kodi",
-      "This picture is part of the page, with no address for Kodi to fetch it from."]]);
+    assert.equal(chrome.notes.length, 1);
+    assert.equal(chrome.notes[0][0], "Can't send this to Kodi");
+    assert.match(chrome.notes[0][1], /part of the page/);
     assert.deepEqual(kodi.calls, []);
   });
 });

@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 import { beforeEach, describe, test } from "node:test";
-import { Kodi, kindOf, seconds, timing, youtubeId, youtubeStart } from "../extension/kodi.js";
+import { Kodi, kindOf, proxied, seconds, timing, youtubeId, youtubeStart } from "../extension/kodi.js";
 import { FakeKodi } from "./fakes.js";
 
 Object.assign(timing, { poll: 0, timeout: 50 });
@@ -111,6 +111,27 @@ describe("sending", () => {
     await send("https://img/a.png");
     assert.deepEqual(kodi.calls.find(([m]) => m === "Player.Open")[1], { item: { file: "https://img/a.png" } });
     assert.equal(kodi.players[0].type, "picture");
+  });
+
+  test("pictures without an extension go through the proxy, as a JPEG named .jpg", async () => {
+    const url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9Gc&s=10";
+    assert.equal(proxied(url), "https://wsrv.nl/x.jpg?url=" +
+      "https%3A%2F%2Fencrypted-tbn0.gstatic.com%2Fimages%3Fq%3Dtbn%3AANd9Gc%26s%3D10&output=jpg");
+    await send(url, { hint: "image" });
+    assert.deepEqual(kodi.calls.find(([m]) => m === "Player.Open")[1], { item: { file: proxied(url) } });
+    assert.equal(kodi.players[0].type, "picture");
+  });
+
+  test("but not pictures with one, nor anything else", async () => {
+    await send("https://img/a.webp?w=500", { hint: "image" });
+    await send("https://cdn/stream", { hint: "video" });
+    assert.ok(!kodi.calls.some(([, p]) => JSON.stringify(p ?? {}).includes("wsrv.nl")));
+  });
+
+  test("nor when the proxy is turned off", async () => {
+    await send("https://tse1.mm.bing.net/th?id=OIP.1", { hint: "image" }, { proxy: false });
+    assert.deepEqual(kodi.calls.find(([m]) => m === "Player.Open")[1],
+                     { item: { file: "https://tse1.mm.bing.net/th?id=OIP.1" } });
   });
 
   test("queueing adds to the end, and doesn't wait", async () => {

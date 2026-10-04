@@ -6,7 +6,7 @@ A Chrome extension: right-click a picture, video, song or link and pick **Send t
 
 | You right-click | Kodi gets |
 |---|---|
-| A picture | the picture, in its picture viewer |
+| A picture | the picture, in its picture viewer. One whose address has no extension, like an image search's thumbnails, through the [wsrv.nl](https://wsrv.nl) image proxy (see below) |
 | A video or song with a real address | that file |
 | A video in a streaming player (YouTube, Twitch, … whose videos are `blob:` addresses) | the page or the embedded player, for yt-dlp or the YouTube add-on to play |
 | A link | where it points to, e.g. a YouTube video in a list of them |
@@ -23,14 +23,15 @@ You are told how it went in a notification, once Kodi has started playing (or qu
 The options are in the extension's *Details › Extension options*, or on right-click on its toolbar button. There you can also choose:
 
 - **YouTube**: through the YouTube add-on (starts faster), or through SendToKodi.
+- **Pictures**: whether pictures without an extension go through wsrv.nl (on by default).
 - **Right-click menu**: both items, or only *Send to Kodi* or only *Queue on Kodi*. Chrome puts an extension's items in a submenu of their own when there are several, so pick one to have it right in the menu.
 
 ## Notes
 
 - YouTube shows its own menu on right-click on a video; right-click again for the browser's. Or right-click the video's link or thumbnail, or use the toolbar button.
 - Kodi fetches what you send by itself, without your browser's cookies, so pictures and videos behind a login won't play.
-- Pictures inlined in a page (`data:` addresses, like image-search thumbnails) have no address Kodi can fetch, so they can't be sent; nor can files on this computer. send2kodi does both.
-- Kodi shows pictures whose address it recognises as one, by extension; one without (an image proxy's `/image?id=…`) may not show.
+- Kodi only shows a picture whose address ends in `.jpg`, `.png`, …: given one without, like Google's and Bing's thumbnails, its viewer hands it to the video player, which shows it for a frame and stops. send2kodi serves such pictures from your computer under a `.jpg` name; an extension can't serve anything, so chrome2kodi sends Kodi `https://wsrv.nl/x.jpg?url=<the picture>&output=jpg` instead: [wsrv.nl](https://wsrv.nl) fetches the picture and hands it on as a JPEG. It sees those pictures' addresses and nothing else. Turned off in the options, they flash and vanish.
+- Pictures inlined in a page (`data:` addresses, like the first rows of Google's image results) have no address for Kodi or wsrv.nl to fetch, so they can't be sent: open the picture, and send the large one. Nor can files on this computer: send2kodi does those.
 - Pictures can't be queued on a slideshow that is already showing, a limit of Kodi's: send them instead, or leave the slideshow first.
 
 ## Tests

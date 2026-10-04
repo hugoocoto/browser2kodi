@@ -7,6 +7,7 @@ export const DEFAULTS = {
   user: "kodi",      // web server login, if one is set in Kodi
   pass: "",
   youtube: "addon",  // addon = YouTube add-on, ytdlp = SendToKodi
+  proxy: true,       // pictures without an extension go through wsrv.nl
   menu: "both",      // right-click items: both, send or queue
 };
 
@@ -18,6 +19,7 @@ const VIDEO_PLAYLIST = 1;
 const PICTURE_PLAYLIST = 2;
 const YOUTUBE_ADDON = "plugin.video.youtube";
 const SENDTOKODI_ADDON = "plugin.video.sendtokodi";
+const PROXY = "https://wsrv.nl/x.jpg";
 
 // Media by extension, which is what Kodi goes by: the usual part of its own
 // lists. Stream manifests are played as videos.
@@ -103,6 +105,18 @@ export function kindOf(url, hint = null) {
   return ["video", "audio", "image"].includes(hint) ? hint : null;
 }
 
+/**
+ * A picture's address through the wsrv.nl image proxy, as a JPEG under a
+ * path ending in .jpg. Kodi goes by the extension of the path: given a
+ * picture without one (an image search's thumbnails), its viewer hands it
+ * to the video player, which shows a frame of it and stops. send2kodi
+ * serves such pictures itself, under a .jpg name; an extension can't serve
+ * anything, so the proxy does it.
+ */
+export function proxied(url) {
+  return `${PROXY}?url=${encodeURIComponent(url)}&output=jpg`;
+}
+
 function basicAuth(user, pass) {
   const bytes = new TextEncoder().encode(`${user}:${pass}`);
   return "Basic " + btoa(String.fromCharCode(...bytes));
@@ -157,10 +171,12 @@ export class Kodi {
   }
 
   /**
-   * How Kodi gets a link: "direct" (it plays it itself), or "youtube" /
+   * How Kodi gets a link: "direct" (it plays it itself), "proxy" (a picture
+   * it can't tell for one by its address, through wsrv.nl), or "youtube" /
    * "sendtokodi" (a page that add-on resolves).
    */
   async route(url, kind) {
+    if (kind === "image" && MEDIA[extension(url)] !== "image" && this.s.proxy) return "proxy";
     if (kind) return "direct";
     const addons = await this.addons();
     if (youtubeId(url) && this.s.youtube !== "ytdlp" && addons.has(YOUTUBE_ADDON)) {
@@ -187,6 +203,7 @@ export class Kodi {
       how === "youtube" ? `plugin://${YOUTUBE_ADDON}/play/?video_id=${youtubeId(url)}` +
                           (start ? `&seek=${start}` : "")
       : how === "sendtokodi" ? `plugin://${SENDTOKODI_ADDON}/?${url}`
+      : how === "proxy" ? proxied(url)
       : url;
 
     if (playlist === PICTURE_PLAYLIST && !queue) {

@@ -13,7 +13,7 @@ function show(text, cls = "") {
 
 /** "http://kodi.local:8081/" is taken as host kodi.local, port 8081. */
 function read() {
-  const s = Object.fromEntries(new FormData(form));
+  const s = { ...Object.fromEntries(new FormData(form)), proxy: form.elements.proxy.checked };
   let host = s.host.trim().replace(/^[a-z]+:\/\//i, "").replace(/\/.*$/, "");
   const m = /^([^:\]]+|\[[^\]]+\]):(\d+)$/.exec(host);
   if (m) [host, s.port] = [m[1], m[2]];
@@ -24,7 +24,8 @@ const saved = await chrome.storage.local.get(Object.keys(DEFAULTS));
 const current = { ...DEFAULTS, ...saved };
 for (const [name, value] of Object.entries(current)) {
   const field = form.elements[name];
-  if (field) field.value = value;
+  if (field?.type === "checkbox") field.checked = value;
+  else if (field) field.value = value;
 }
 
 form.addEventListener("submit", async (event) => {

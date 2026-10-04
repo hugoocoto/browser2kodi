@@ -57,7 +57,8 @@ async function send(url, tab, { queue = false, hint = null } = {}) {
   const id = `send-${Date.now()}`;
   if (url?.startsWith("data:")) {
     notify(id, "Can't send this to Kodi",
-           "This picture is part of the page, with no address for Kodi to fetch it from.");
+           "This picture is part of the page, with no address for Kodi to fetch it from. " +
+           "In an image search, open it first, and send the large one.");
     return;
   }
   if (!url || !/^https?:/i.test(url)) {
