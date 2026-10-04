@@ -15,7 +15,7 @@ data=${XDG_DATA_HOME:-$HOME/.local/share}/chrome2kodi
 host=$data/chrome2kodi-host
 config=${XDG_CONFIG_HOME:-$HOME/.config}
 browsers="google-chrome google-chrome-beta google-chrome-unstable chromium
-          BraveSoftware/Brave-Browser vivaldi microsoft-edge"
+          BraveSoftware/Brave-Browser vivaldi microsoft-edge net.imput.helium"
 
 die() { echo "install.sh: $*" >&2; exit 1; }
 
@@ -68,7 +68,7 @@ EOF
     echo "Browser:   $config/$b"
     installed=$((installed + 1))
 done
-[ $installed -gt 0 ] || die "no Chrome, Chromium, Brave, Vivaldi or Edge profile in $config"
+[ $installed -gt 0 ] || die "no Chrome, Chromium, Brave, Vivaldi, Edge or Helium profile in $config"
 
 cat <<EOF
 

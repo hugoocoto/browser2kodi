@@ -18,7 +18,7 @@ Pictures can't be added to a slideshow that is already showing, a limit of Kodi'
 
 ## Install
 
-Needs [send2kodi](https://github.com/hugoocoto/send2kodi) installed and configured, and Chrome, Chromium, Brave, Vivaldi or Edge on Linux.
+Needs [send2kodi](https://github.com/hugoocoto/send2kodi) installed and configured, and Chrome, Chromium, Brave, Vivaldi, Edge or Helium on Linux.
 
 ```sh
 ./install.sh
