@@ -2,47 +2,53 @@
 
 [![tests](https://github.com/hugoocoto/chrome2kodi/actions/workflows/tests.yml/badge.svg)](https://github.com/hugoocoto/chrome2kodi/actions/workflows/tests.yml)
 
-A Chrome extension: right-click a picture, video, song or link and pick **Send to Kodi** to play it now, or **Queue on Kodi** to add it to the end of Kodi's queue. It talks to Kodi's JSON-RPC API directly, the way [send2kodi](https://github.com/hugoocoto/send2kodi) does, with nothing else to install: YouTube goes through the YouTube add-on, links to media files are played by Kodi itself, and anything else yt-dlp knows goes through SendToKodi.
+A browser extension that plays what you're looking at on Kodi.
 
-| You right-click | Kodi gets |
-|---|---|
-| A picture | the picture, in its picture viewer. One whose address has no extension, like an image search's thumbnails, through the [wsrv.nl](https://wsrv.nl) image proxy (see below) |
-| A video or song with a real address | that file |
-| A video in a streaming player (YouTube, Twitch, … whose videos are `blob:` addresses) | the page or the embedded player, for yt-dlp or the YouTube add-on to play |
-| A link | where it points to, e.g. a YouTube video in a list of them |
-| Anywhere else on the page, or the toolbar button | the page |
+- **Right-click** a picture, video, song or link → **Send to Kodi** (play now) or **Queue on Kodi**.
+- **Click the toolbar button** to send the page you're on, e.g. a YouTube video.
 
-You are told how it went in a notification, once Kodi has started playing (or queued it), or has failed to.
+Nothing to install on your computer: it talks to Kodi directly.
 
 ## Install
 
-1. In `chrome://extensions`, turn on *Developer mode*, click *Load unpacked*, and pick the `extension` folder. Works in Chrome, Chromium, Brave, Vivaldi, Edge, Helium and the like.
-2. The options open: enter your Kodi's address (and port, user and password, if they aren't the defaults), and *Save*. Chrome asks to let chrome2kodi talk to that address; it reaches nothing else.
-3. In Kodi, turn on *Settings › Services › Control › Allow remote control via HTTP*. For pages other than media files, install the [SendToKodi](https://github.com/firsttris/plugin.video.sendtokodi) add-on; for YouTube, the YouTube add-on (or SendToKodi does it too).
+1. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the `extension` folder.
+2. In the options that open, enter your Kodi's address and click **Save**.
+3. In Kodi, turn on **Settings › Services › Control › Allow remote control via HTTP**.
+4. Optional Kodi add-ons:
+   - **YouTube**, for YouTube videos.
+   - **[SendToKodi](https://github.com/firsttris/plugin.video.sendtokodi)**, for other video sites (anything yt-dlp supports).
 
-The options are in the extension's *Details › Extension options*, or on right-click on its toolbar button. There you can also choose:
+Tip: pin the toolbar button with the puzzle-piece menu 🧩 next to the address bar.
 
-- **YouTube**: through the YouTube add-on (starts faster), or through SendToKodi.
-- **Pictures**: whether pictures without an extension go through wsrv.nl (on by default).
-- **Right-click menu**: both items, or only *Send to Kodi* or only *Queue on Kodi*. Chrome puts an extension's items in a submenu of their own when there are several, so pick one to have it right in the menu.
+Works in Chrome, Chromium, Brave, Vivaldi, Edge and Helium.
 
-## Notes
+## Options
 
-- YouTube shows its own menu on right-click on a video; right-click again for the browser's. Or right-click the video's link or thumbnail, or use the toolbar button.
-- Kodi fetches what you send by itself, without your browser's cookies, so pictures and videos behind a login won't play.
-- Kodi only shows a picture whose address ends in `.jpg`, `.png`, …: given one without, like Google's and Bing's thumbnails, its viewer hands it to the video player, which shows it for a frame and stops. send2kodi serves such pictures from your computer under a `.jpg` name; an extension can't serve anything, so chrome2kodi sends Kodi `https://wsrv.nl/x.jpg?url=<the picture>&output=jpg` instead: [wsrv.nl](https://wsrv.nl) fetches the picture and hands it on as a JPEG. It sees those pictures' addresses and nothing else. Turned off in the options, they flash and vanish.
-- Pictures inlined in a page (`data:` addresses, like the first rows of Google's image results) have no address for Kodi or wsrv.nl to fetch, so they can't be sent: open the picture, and send the large one. Nor can files on this computer: send2kodi does those.
-- Pictures can't be queued on a slideshow that is already showing, a limit of Kodi's: send them instead, or leave the slideshow first.
+Open them from **Details › Extension options**, or by right-clicking the toolbar button.
+
+- **YouTube**: play through the YouTube add-on (faster) or SendToKodi.
+- **Pictures**: send pictures without a file extension through wsrv.nl (see below).
+- **Right-click menu**: show both items, or just one. With one item it appears directly in the menu instead of in a submenu.
+
+## How you know it worked
+
+A notification, plus a badge on the toolbar button: `…` sending, `✓` playing, `!` failed (hover for why). The badge is there for desktops without notifications.
+
+## Limitations
+
+- **Pictures without a file extension** (like Google and Bing thumbnails): Kodi can't show these directly, so they go through the [wsrv.nl](https://wsrv.nl) image proxy, which only sees the picture's address. If you turn this off, those pictures flash and vanish.
+- **Pictures embedded in the page** (the first rows of Google Images): these have no address to send. Click the picture and send the large one instead.
+- **Things behind a login** won't play, because Kodi fetches them without your browser's cookies.
+- **Files on your computer** can't be sent. Use [send2kodi](https://github.com/hugoocoto/send2kodi) for those.
+- **On YouTube**, right-click a video twice to get the browser's menu, or use the toolbar button.
 
 ## Tests
-
-`tests/` runs the extension in Node, against stand-ins for Chrome's API and for Kodi. Nothing goes to Kodi.
 
 ```sh
 node --test
 ```
 
-GitHub Actions runs them on Node 22 and the latest Node for every push to `main` and every pull request.
+These run the extension in Node, against fakes of Chrome and Kodi. CI runs them on every push.
 
 ## License
 
