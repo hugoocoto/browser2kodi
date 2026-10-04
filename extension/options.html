@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>chrome2kodi options</title>
+<style>
+  :root { color-scheme: light dark; --muted: #666; --ok: #1a7f37; --bad: #c62828; }
+  @media (prefers-color-scheme: dark) { :root { --muted: #aaa; --ok: #4ac26b; --bad: #ff7b72; } }
+  body { font: 14px system-ui, sans-serif; margin: 16px; min-width: 360px; max-width: 520px; }
+  fieldset { border: 0; padding: 0; margin: 0 0 16px; }
+  legend { font-weight: 600; margin-bottom: 8px; padding: 0; }
+  label { display: grid; grid-template-columns: 9em 1fr; align-items: center; gap: 8px; margin: 6px 0; }
+  label.choice { display: flex; gap: 6px; margin: 4px 0; }
+  input:not([type=radio]), select { font: inherit; padding: 4px 6px; }
+  .hint { color: var(--muted); font-size: 12px; margin: 2px 0 0 calc(9em + 8px); }
+  button { font: inherit; padding: 6px 16px; }
+  #status { margin-left: 12px; white-space: pre-line; }
+  #status.ok { color: var(--ok); }
+  #status.bad { color: var(--bad); }
+</style>
+</head>
+<body>
+<form id="form">
+  <fieldset>
+    <legend>Kodi</legend>
+    <label>Address <input name="host" placeholder="192.168.1.20 or kodi.local" required></label>
+    <label>Port <input name="port" inputmode="numeric" pattern="\d{1,5}" required></label>
+    <label>User <input name="user" autocomplete="off"></label>
+    <label>Password <input name="pass" type="password" autocomplete="off"></label>
+    <p class="hint">In Kodi: Settings › Services › Control › <i>Allow remote control via HTTP</i>.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>YouTube</legend>
+    <label class="choice"><input type="radio" name="youtube" value="addon"> Through the YouTube add-on (starts faster)</label>
+    <label class="choice"><input type="radio" name="youtube" value="ytdlp"> Through SendToKodi (yt-dlp)</label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Right-click menu</legend>
+    <label class="choice"><input type="radio" name="menu" value="both"> Send and Queue, in a chrome2kodi submenu</label>
+    <label class="choice"><input type="radio" name="menu" value="send"> Only <i>Send to Kodi</i>, directly in the menu</label>
+    <label class="choice"><input type="radio" name="menu" value="queue"> Only <i>Queue on Kodi</i>, directly in the menu</label>
+  </fieldset>
+
+  <button type="submit">Save</button><span id="status"></span>
+</form>
+<script type="module" src="options.js"></script>
+</body>
+</html>

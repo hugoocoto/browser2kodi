@@ -11,20 +11,17 @@ permissions:
 
 jobs:
   test:
-    name: Python ${{ matrix.python }}
-    # The last Ubuntu that setup-python has Python 3.9 for.
-    runs-on: ubuntu-24.04
+    name: Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        # The oldest Python send2kodi supports, and the newest.
-        python: ["3.9", "3.14"]
+        # The oldest maintained Node, and the newest.
+        node: ["22", "node"]
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-node@v7
         with:
-          python-version: ${{ matrix.python }}
-      # The extension's tests run in the runner's Node, and are skipped without it.
-      - run: node --version
-      - run: python -m unittest discover -v tests
+          node-version: ${{ matrix.node }}
+      - run: node --test

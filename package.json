@@ -1,0 +1,8 @@
+{
+  "name": "chrome2kodi",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
