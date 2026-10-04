@@ -12,7 +12,7 @@ export const DEFAULTS = {
 };
 
 // Changed by the tests only.
-export const timing = { poll: 2000, timeout: 60000, request: 10000 };
+export const timing = { poll: 2000, timeout: 60000, request: 10000, badge: 5000 };
 
 const MUSIC_PLAYLIST = 0;
 const VIDEO_PLAYLIST = 1;

@@ -98,10 +98,10 @@ const event = (on, name) => ({ addListener: (f) => { on[name] = f; } });
 /** The parts of the chrome API chrome2kodi uses; on holds the listeners. */
 export function fakeChrome() {
   const chrome = {
-    on: {}, menus: [], notes: [], optionsOpened: 0, badges: [],
+    on: {}, menus: [], notes: [], optionsOpened: 0, badges: [], titles: [],
     store: {}, granted: new Set(),
     reset() {
-      Object.assign(this, { menus: [], notes: [], optionsOpened: 0, badges: [], store: {} });
+      Object.assign(this, { menus: [], notes: [], optionsOpened: 0, badges: [], titles: [], store: {} });
       this.granted.clear();
     },
   };
@@ -131,6 +131,7 @@ export function fakeChrome() {
     action: {
       onClicked: event(on, "action"),
       setBadgeText: async ({ text }) => { chrome.badges.push(text); },
+      setTitle: async ({ title }) => { chrome.titles.push(title); },
     },
     notifications: { create: (id, n) => { chrome.notes.push([n.title, n.message]); } },
   });

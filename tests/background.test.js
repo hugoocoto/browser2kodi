@@ -2,11 +2,12 @@
 // notifications, against fakes of the chrome API and of Kodi.
 
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { before, beforeEach, describe, test } from "node:test";
 import { proxied, timing } from "../extension/kodi.js";
 import { FakeKodi, fakeChrome } from "./fakes.js";
 
-Object.assign(timing, { poll: 0, timeout: 50 });
+Object.assign(timing, { poll: 0, timeout: 50, badge: 0 });
 
 const chrome = fakeChrome();
 globalThis.chrome = chrome;
@@ -15,7 +16,8 @@ let kodi;
 
 before(async () => { await import("../extension/background.js"); });
 
-beforeEach(() => {
+beforeEach(async () => {
+  await new Promise((resolve) => setTimeout(resolve, 5));  // the last test's ✓ gone
   chrome.reset();
   chrome.store.host = "kodi";
   chrome.granted.add("http://kodi/*");
@@ -87,12 +89,20 @@ describe("what is sent", () => {
     assert.equal(given(), "plugin://plugin.video.sendtokodi/?https://page/");
   });
 
+  test("the toolbar button needs activeTab to know the page", async () => {
+    const manifest = JSON.parse(fs.readFileSync(new URL("../extension/manifest.json", import.meta.url)));
+    assert.ok(manifest.permissions.includes("activeTab"));
+    await chrome.on.action({ id: 1 });  // what Chrome gives without it: no url
+    assert.equal(chrome.badges.at(-1), "!");
+  });
+
   test("nothing Kodi can open", async () => {
     for (const info of [{ mediaType: "image", srcUrl: "blob:https://page/2" },
                         { linkUrl: "javascript:void(0)" }]) {
       chrome.notes = [];
       await click(info);
       assert.equal(chrome.notes[0][0], "Can't send this to Kodi");
+      assert.equal(chrome.badges.at(-1), "!");
     }
     assert.deepEqual(kodi.calls, []);
   });
@@ -110,7 +120,10 @@ describe("notifications", () => {
   test("send and queue", async () => {
     await click({ linkUrl: "https://cdn/a.mp4" });
     assert.deepEqual(chrome.notes.map(([t]) => t), ["Sending to Kodi…", "Playing on Kodi"]);
-    assert.deepEqual(chrome.badges, ["…", ""]);
+    assert.deepEqual(chrome.badges, ["…", "✓"]);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    assert.equal(chrome.badges.at(-1), "", "the ✓ goes after a while");
+    assert.equal(chrome.titles.at(-1), "Send this page to Kodi");
     chrome.notes = [];
     await click({ linkUrl: "https://cdn/b.mp4" }, "queue");
     assert.deepEqual(chrome.notes.map(([t]) => t), ["Queueing on Kodi…", "Queued on Kodi"]);
@@ -123,7 +136,9 @@ describe("notifications", () => {
     const [title, message] = chrome.notes.at(-1);
     assert.equal(title, "Kodi didn't play it");
     assert.match(message, /Can't reach Kodi/);
+    // Shown on the button too, for desktops without notifications.
     assert.equal(chrome.badges.at(-1), "!");
+    assert.match(chrome.titles.at(-1), /^Kodi didn't play it\nCan't reach Kodi/);
   });
 
   test("without Kodi set up, the options open", async () => {

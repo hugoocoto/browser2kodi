@@ -1,12 +1,13 @@
 // chrome2kodi: the "Send to Kodi" and "Queue on Kodi" context menu items, and
 // the toolbar button, hand a URL to Kodi, through its JSON-RPC API.
 
-import { DEFAULTS, Kodi, origin } from "./kodi.js";
+import { DEFAULTS, Kodi, origin, timing } from "./kodi.js";
 
 const ICON = "icons/icon-128.png";
 
 const CONTEXTS = ["image", "video", "audio", "link", "page"];
 const ITEMS = { send: "Send to Kodi", queue: "Queue on Kodi" };
+const DEFAULT_TITLE = "Send this page to Kodi";
 
 async function settings() {
   return { ...DEFAULTS, ...(await chrome.storage.local.get(Object.keys(DEFAULTS))) };
@@ -56,25 +57,24 @@ function target(info) {
 async function send(url, tab, { queue = false, hint = null } = {}) {
   const id = `send-${Date.now()}`;
   if (url?.startsWith("data:")) {
-    notify(id, "Can't send this to Kodi",
+    report(tab, id, "!", "Can't send this to Kodi",
            "This picture is part of the page, with no address for Kodi to fetch it from. " +
            "In an image search, open it first, and send the large one.");
     return;
   }
   if (!url || !/^https?:/i.test(url)) {
-    notify(id, "Can't send this to Kodi", `Kodi can't open ${shorten(url || "this")}.`);
+    report(tab, id, "!", "Can't send this to Kodi", `Kodi can't open ${shorten(url || "this")}.`);
     return;
   }
   const s = await settings();
   if (!s.host || !(await chrome.permissions.contains({ origins: [origin(s)] }))) {
-    notify(id, "Set up chrome2kodi", s.host
+    report(tab, id, "!", "Set up chrome2kodi", s.host
       ? `chrome2kodi may not talk to ${s.host} yet: save the options again to allow it.`
       : "Enter your Kodi's address in chrome2kodi's options.");
     chrome.runtime.openOptionsPage();
     return;
   }
-  notify(id, queue ? "Queueing on Kodi…" : "Sending to Kodi…", shorten(url));
-  badge(tab, "…");
+  report(tab, id, "…", queue ? "Queueing on Kodi…" : "Sending to Kodi…", shorten(url));
   // Chrome stops an idle service worker after 30s; waiting for Kodi to start
   // playing can take longer, and only calls to its API count as activity.
   const keepAlive = setInterval(() => chrome.runtime.getPlatformInfo(), 20000);
@@ -86,19 +86,24 @@ async function send(url, tab, { queue = false, hint = null } = {}) {
   } finally {
     clearInterval(keepAlive);
   }
-  badge(tab, error ? "!" : "");
-  const title = !error ? (queue ? "Queued on Kodi" : "Playing on Kodi")
-                       : (queue ? "Kodi didn't queue it" : "Kodi didn't play it");
-  notify(id, title, error ?? shorten(url));
+  if (error) report(tab, id, "!", queue ? "Kodi didn't queue it" : "Kodi didn't play it", error);
+  else report(tab, id, "✓", queue ? "Queued on Kodi" : "Playing on Kodi", shorten(url));
 }
 
-function notify(id, title, message) {
+// How it goes, as a notification, and on the toolbar button, for desktops
+// that show no notifications: a badge ("…", then "✓" for a while, or "!"),
+// and the message as its tooltip.
+function report(tab, id, mark, title, message) {
   chrome.notifications.create(id, { type: "basic", iconUrl: ICON, title, message });
-}
-
-function badge(tab, text) {
   if (!tab?.id || tab.id < 0) return;
-  chrome.action.setBadgeText({ tabId: tab.id, text }).catch(() => {}); // tab closed
+  const tabId = tab.id;
+  const tooltip = mark === "✓" ? DEFAULT_TITLE : `${title}\n${message}`;
+  // The tab may be closed by now.
+  chrome.action.setBadgeText({ tabId, text: mark }).catch(() => {});
+  chrome.action.setTitle({ tabId, title: tooltip }).catch(() => {});
+  if (mark === "✓") {
+    setTimeout(() => chrome.action.setBadgeText({ tabId, text: "" }).catch(() => {}), timing.badge);
+  }
 }
 
 function shorten(url) {
