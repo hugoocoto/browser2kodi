@@ -1,9 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "chrome2kodi",
-  "version": "0.2.0",
+  "name": "browser2kodi",
+  "version": "0.3.0",
   "description": "Right-click a picture, video, song or link and play it on Kodi.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAujXSW/G9ETgBhlTuMMS0qCqy4qM42jGcaVkIkowDUeRHOmlcLaHAvqJVQdKi9T4ri4yLSLJq5nmGoJqGYL58UtwzcrfwwjARp6r9ICJYq8UQawHjXCjkj9StiKKRc3YE+GHjgb592hFHRAAMvVl+kXW38AMJjMtLGdRHpsAhSXWG6iFQYLl5BBDsKqbFeU3oj56yKrTAG8tIw49FvfsNL/Bpkjy94OTNbh2VHUCiJ2Hqm+29oHqZxA3rpwmw62/jA8QpcIGDohn7CxEkyph0wsdGfg6j6rnnecMf/MD0pZwWt+aeeyoRBMQIyLz2Mio0FkxwNHZfOlMsKMO+CFWBUQIDAQAB",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "browser2kodi@hugoocoto.github.io",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
   "permissions": [
     "activeTab",
     "contextMenus",
@@ -13,8 +22,12 @@
   "optional_host_permissions": [
     "http://*/*"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'"
+  },
   "background": {
     "service_worker": "background.js",
+    "scripts": ["background.js"],
     "type": "module"
   },
   "options_ui": {
@@ -22,7 +35,8 @@
     "open_in_tab": false
   },
   "action": {
-    "default_title": "Send this page to Kodi"
+    "default_title": "Send this page to Kodi",
+    "default_area": "navbar"
   },
   "icons": {
     "16": "icons/icon-16.png",

@@ -1,0 +1,82 @@
+name: release
+
+# Pushing a tag vX.Y.Z, the version in extension/manifest.json, makes a
+# release with the extension for Chrome (a zip to load unpacked) and for
+# Firefox (an .xpi, signed by Mozilla if the AMO_JWT_ISSUER and
+# AMO_JWT_SECRET secrets hold an addons.mozilla.org API key).
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: node
+
+      - name: Check the tag is the manifest's version
+        run: |
+          version=$(node -p 'require("./extension/manifest.json").version')
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::The tag is $GITHUB_REF_NAME, but extension/manifest.json says $version"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - run: node --test
+
+      # Ubuntu keeps Chrome from sandboxing itself.
+      - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - run: node --test tests/browsers.js
+        env:
+          BROWSERS: google-chrome firefox
+
+      - run: node build.js
+
+      - name: Chrome
+        run: |
+          mkdir out
+          cp -r dist/chrome browser2kodi
+          zip -r "out/browser2kodi-$VERSION-chrome.zip" browser2kodi
+
+      - name: Firefox
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          if [ -n "$AMO_JWT_ISSUER" ]; then
+            npx --yes web-ext@8 sign --channel=unlisted --source-dir=dist/firefox \
+              --artifacts-dir=signed --api-key="$AMO_JWT_ISSUER" --api-secret="$AMO_JWT_SECRET"
+            cp signed/*.xpi "out/browser2kodi-$VERSION-firefox.xpi"
+          else
+            echo "::warning::Firefox add-on not signed: no AMO_JWT_ISSUER secret. Firefox won't install it."
+            (cd dist/firefox && zip -r "../../out/browser2kodi-$VERSION-firefox-unsigned.xpi" .)
+          fi
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          xpi=$(basename out/*firefox*.xpi)
+          firefox="open **$xpi** below with Firefox, and click **Add**."
+          case $xpi in *unsigned*)
+            firefox="$firefox It isn't signed by Mozilla: only Firefox Developer Edition, Nightly and ESR, with \`xpinstall.signatures.required\` off in \`about:config\`, will take it."
+          esac
+          cat > notes.md <<EOF
+          ## Install
+
+          - **Firefox** (and LibreWolf, Waterfox, Zen, Floorp): $firefox
+          - **Chrome** (and Chromium, Brave, Vivaldi, Edge, Opera, Helium): unzip **browser2kodi-$VERSION-chrome.zip** below, open \`chrome://extensions\`, turn on **Developer mode**, click **Load unpacked** and pick the \`browser2kodi\` folder.
+
+          Then enter your Kodi's address in the options that open. More in the [README](https://github.com/$GITHUB_REPOSITORY#install).
+          EOF
+          gh release create "$GITHUB_REF_NAME" out/* --title "browser2kodi $VERSION" \
+            --notes-file notes.md --generate-notes

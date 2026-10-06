@@ -36,7 +36,7 @@ function given() {
 }
 
 describe("menu", () => {
-  test("both items by default, which Chrome puts in a submenu", async () => {
+  test("both items by default, which browsers put in a submenu", async () => {
     await chrome.on.installed({ reason: "update" });
     assert.deepEqual(chrome.menus, ["send", "queue"]);
   });
@@ -48,6 +48,11 @@ describe("menu", () => {
     chrome.store.menu = "queue";
     await chrome.on.storage({ menu: { newValue: "queue" } });
     assert.deepEqual(chrome.menus, ["queue"]);
+  });
+
+  test("made again when the browser starts", async () => {
+    await chrome.on.startup();
+    assert.deepEqual(chrome.menus, ["send", "queue"]);
   });
 
   test("installing opens the options, until Kodi is set", async () => {
@@ -92,7 +97,7 @@ describe("what is sent", () => {
   test("the toolbar button needs activeTab to know the page", async () => {
     const manifest = JSON.parse(fs.readFileSync(new URL("../extension/manifest.json", import.meta.url)));
     assert.ok(manifest.permissions.includes("activeTab"));
-    await chrome.on.action({ id: 1 });  // what Chrome gives without it: no url
+    await chrome.on.action({ id: 1 });  // what the browser gives without it: no url
     assert.equal(chrome.badges.at(-1), "!");
   });
 
@@ -144,7 +149,7 @@ describe("notifications", () => {
   test("without Kodi set up, the options open", async () => {
     delete chrome.store.host;
     await click({});
-    assert.deepEqual(chrome.notes, [["Set up chrome2kodi", "Enter your Kodi's address in chrome2kodi's options."]]);
+    assert.deepEqual(chrome.notes, [["Set up browser2kodi", "Enter your Kodi's address in browser2kodi's options."]]);
     assert.equal(chrome.optionsOpened, 1);
     assert.deepEqual(kodi.calls, []);
   });

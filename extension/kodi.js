@@ -150,7 +150,7 @@ export class Kodi {
     }
     if (r.status === 401) {
       throw new Error(`Kodi at ${this.s.host} rejected the login; ` +
-                      "set the user and password in chrome2kodi's options.");
+                      "set the user and password in browser2kodi's options.");
     }
     if (!r.ok) throw new Error(`Kodi at ${this.s.host}: HTTP ${r.status} ${r.statusText}`);
     const resp = await r.json();

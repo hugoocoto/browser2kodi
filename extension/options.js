@@ -1,4 +1,4 @@
-// The options page: where Kodi is, and how chrome2kodi behaves. Saving asks
+// The options page: where Kodi is, and how browser2kodi behaves. Saving asks
 // for access to Kodi's address, then checks that Kodi answers.
 
 import { DEFAULTS, Kodi, origin } from "./kodi.js";
@@ -33,10 +33,10 @@ form.addEventListener("submit", async (event) => {
   const s = read();
   form.elements.host.value = s.host;
   form.elements.port.value = s.port;
-  // Asked first: Chrome only asks while the click is fresh.
+  // Asked first: browsers only ask while the click is fresh.
   const granted = await chrome.permissions.request({ origins: [origin(s)] });
   if (!granted) {
-    show(`Not saved: chrome2kodi needs your permission to talk to ${s.host}.`, "bad");
+    show(`Not saved: browser2kodi needs your permission to talk to ${s.host}.`, "bad");
     return;
   }
   const old = (await chrome.storage.local.get("host")).host;

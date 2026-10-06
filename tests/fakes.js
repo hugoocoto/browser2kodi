@@ -95,7 +95,7 @@ export class FakeKodi {
 
 const event = (on, name) => ({ addListener: (f) => { on[name] = f; } });
 
-/** The parts of the chrome API chrome2kodi uses; on holds the listeners. */
+/** The parts of the chrome API browser2kodi uses; on holds the listeners. */
 export function fakeChrome() {
   const chrome = {
     on: {}, menus: [], notes: [], optionsOpened: 0, badges: [], titles: [],
@@ -109,6 +109,7 @@ export function fakeChrome() {
   Object.assign(chrome, {
     runtime: {
       onInstalled: event(on, "installed"),
+      onStartup: event(on, "startup"),
       openOptionsPage: () => { chrome.optionsOpened++; },
       getPlatformInfo: async () => ({ os: "linux" }),
     },

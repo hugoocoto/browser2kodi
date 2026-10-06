@@ -1,8 +1,10 @@
 {
-  "name": "chrome2kodi",
+  "name": "browser2kodi",
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "test:browsers": "node --test tests/browsers.js",
+    "build": "node build.js"
   }
 }

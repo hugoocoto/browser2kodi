@@ -1,4 +1,4 @@
-// chrome2kodi: the "Send to Kodi" and "Queue on Kodi" context menu items, and
+// browser2kodi: the "Send to Kodi" and "Queue on Kodi" context menu items, and
 // the toolbar button, hand a URL to Kodi, through its JSON-RPC API.
 
 import { DEFAULTS, Kodi, origin, timing } from "./kodi.js";
@@ -13,7 +13,7 @@ async function settings() {
   return { ...DEFAULTS, ...(await chrome.storage.local.get(Object.keys(DEFAULTS))) };
 }
 
-// Chrome puts an extension's items in a submenu of their own when there are
+// Browsers put an extension's items in a submenu of their own when there are
 // several; a single one goes in the right-click menu itself.
 async function buildMenu() {
   const { menu } = await settings();
@@ -28,16 +28,23 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
   if (reason === "install" && !(await settings()).host) chrome.runtime.openOptionsPage();
 });
 
+// Browsers are meant to keep the menu; this is in case one doesn't.
+chrome.runtime.onStartup.addListener(buildMenu);
+
 chrome.storage.onChanged.addListener((changes) => {
   if (changes.menu) return buildMenu();
 });
 
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+// Exported for the browser tests, which call them in place of a click.
+export function clicked(info, tab) {
   const [url, hint] = target(info);
   return send(url, tab, { queue: info.menuItemId === "queue", hint });
-});
+}
 
-chrome.action.onClicked.addListener((tab) => send(tab.url, tab));
+export const pressed = (tab) => send(tab.url, tab);
+
+chrome.contextMenus.onClicked.addListener(clicked);
+chrome.action.onClicked.addListener(pressed);
 
 // What to send for a right-click, and what the page shows it as: the
 // picture, video or song itself if it has an address Kodi can open, else the
@@ -68,15 +75,15 @@ async function send(url, tab, { queue = false, hint = null } = {}) {
   }
   const s = await settings();
   if (!s.host || !(await chrome.permissions.contains({ origins: [origin(s)] }))) {
-    report(tab, id, "!", "Set up chrome2kodi", s.host
-      ? `chrome2kodi may not talk to ${s.host} yet: save the options again to allow it.`
-      : "Enter your Kodi's address in chrome2kodi's options.");
+    report(tab, id, "!", "Set up browser2kodi", s.host
+      ? `browser2kodi may not talk to ${s.host} yet: save the options again to allow it.`
+      : "Enter your Kodi's address in browser2kodi's options.");
     chrome.runtime.openOptionsPage();
     return;
   }
   report(tab, id, "…", queue ? "Queueing on Kodi…" : "Sending to Kodi…", shorten(url));
-  // Chrome stops an idle service worker after 30s; waiting for Kodi to start
-  // playing can take longer, and only calls to its API count as activity.
+  // Browsers stop an idle background script after 30s; waiting for Kodi to
+  // start playing can take longer, and only calls to their API count as activity.
   const keepAlive = setInterval(() => chrome.runtime.getPlatformInfo(), 20000);
   let error = null;
   try {
