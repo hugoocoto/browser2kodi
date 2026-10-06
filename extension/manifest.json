@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "browser2kodi",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Right-click a picture, video, song or link and play it on Kodi.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAujXSW/G9ETgBhlTuMMS0qCqy4qM42jGcaVkIkowDUeRHOmlcLaHAvqJVQdKi9T4ri4yLSLJq5nmGoJqGYL58UtwzcrfwwjARp6r9ICJYq8UQawHjXCjkj9StiKKRc3YE+GHjgb592hFHRAAMvVl+kXW38AMJjMtLGdRHpsAhSXWG6iFQYLl5BBDsKqbFeU3oj56yKrTAG8tIw49FvfsNL/Bpkjy94OTNbh2VHUCiJ2Hqm+29oHqZxA3rpwmw62/jA8QpcIGDohn7CxEkyph0wsdGfg6j6rnnecMf/MD0pZwWt+aeeyoRBMQIyLz2Mio0FkxwNHZfOlMsKMO+CFWBUQIDAQAB",
   "browser_specific_settings": {

@@ -1,0 +1,30 @@
+{
+  "slug": "browser2kodi",
+  "name": {
+    "en-US": "browser2kodi"
+  },
+  "summary": {
+    "en-US": "Send pictures, videos, songs and links to Kodi from the right-click menu or the toolbar button."
+  },
+  "description": {
+    "en-US": "Play what you're looking at on Kodi.\n\n- Right-click a picture, video, song or link: **Send to Kodi** or **Queue on Kodi**.\n- Toolbar button: send the current page, e.g. a YouTube video.\n\nSetup: enter Kodi's address in the options, and in Kodi enable Settings › Services › Control › Allow remote control via HTTP. YouTube needs Kodi's YouTube add-on; other video sites need SendToKodi.\n\nPictures without a file extension go through the wsrv.nl image proxy. You can turn this off in the options.\n\nSource: https://github.com/hugoocoto/browser2kodi"
+  },
+  "categories": {
+    "firefox": [
+      "photos-music-videos"
+    ]
+  },
+  "homepage": {
+    "en-US": "https://github.com/hugoocoto/browser2kodi"
+  },
+  "support_url": {
+    "en-US": "https://github.com/hugoocoto/browser2kodi/issues"
+  },
+  "version": {
+    "license": "MIT",
+    "compatibility": [
+      "firefox"
+    ],
+    "approval_notes": "Needs Kodi with Settings > Services > Control > Allow remote control via HTTP enabled; enter its address in the options. The extension only talks to that address. Pictures without a file extension are sent to Kodi as a wsrv.nl URL, which Kodi fetches. Source: https://github.com/hugoocoto/browser2kodi"
+  }
+}

@@ -1,21 +1,32 @@
 name: release
 
-# Pushing a tag vX.Y.Z, the version in extension/manifest.json, makes a
-# release with the extension for Chrome (a zip to load unpacked) and for
-# Firefox (an .xpi, signed by Mozilla if the AMO_JWT_ISSUER and
-# AMO_JWT_SECRET secrets hold an addons.mozilla.org API key).
+# Pushing a tag vX.Y.Z, the version in extension/manifest.json, publishes it
+# on addons.mozilla.org (AMO), with the listing in amo-listing.json, and as a
+# GitHub release with the extension for Chrome (a zip to load unpacked) and
+# for Firefox (the .xpi Mozilla signs once it approves the version). The
+# AMO_JWT_ISSUER and AMO_JWT_SECRET secrets hold an AMO API key.
+#
+# If Mozilla takes over half an hour, the release goes out without the .xpi.
+# Once it's approved, run this workflow by hand with the version to add it:
+# Actions > release > Run workflow, or gh workflow run release.yml -f version=X.Y.Z
 
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version whose Firefox add-on to add to its release, e.g. 0.3.1"
+        required: true
 
 permissions:
   contents: write
 
 jobs:
   release:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -52,31 +63,42 @@ jobs:
           AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
         run: |
-          if [ -n "$AMO_JWT_ISSUER" ]; then
-            npx --yes web-ext@10 sign --channel=unlisted --source-dir=dist/firefox \
-              --artifacts-dir=signed --api-key="$AMO_JWT_ISSUER" --api-secret="$AMO_JWT_SECRET"
-            cp signed/*.xpi "out/browser2kodi-$VERSION-firefox.xpi"
-          else
-            echo "::warning::Firefox add-on not signed: no AMO_JWT_ISSUER secret. Firefox won't install it."
-            (cd dist/firefox && zip -r "../../out/browser2kodi-$VERSION-firefox-unsigned.xpi" .)
-          fi
+          npx --yes web-ext@10 sign --channel=listed --amo-metadata=amo-listing.json \
+            --source-dir=dist/firefox --approval-timeout=0 \
+            --api-key="$AMO_JWT_ISSUER" --api-secret="$AMO_JWT_SECRET"
+          # 3: still awaiting review.
+          node amo.js "$VERSION" "out/browser2kodi-$VERSION-firefox.xpi" 30 || [ $? -eq 3 ]
 
       - name: Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          xpi=$(basename out/*firefox*.xpi)
-          firefox="open **$xpi** below with Firefox, and click **Add**."
-          case $xpi in *unsigned*)
-            firefox="$firefox It isn't signed by Mozilla: only Firefox Developer Edition, Nightly and ESR, with \`xpinstall.signatures.required\` off in \`about:config\`, will take it."
-          esac
           cat > notes.md <<EOF
           ## Install
 
-          - **Firefox** (and LibreWolf, Waterfox, Zen, Floorp): $firefox
+          - **Firefox** (and LibreWolf, Waterfox, Zen, Floorp): install it from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/browser2kodi/), or open **browser2kodi-$VERSION-firefox.xpi** below with Firefox. If either isn't there yet, Mozilla is still reviewing this version.
           - **Chrome** (and Chromium, Brave, Vivaldi, Edge, Opera, Helium): unzip **browser2kodi-$VERSION-chrome.zip** below, open \`chrome://extensions\`, turn on **Developer mode**, click **Load unpacked** and pick the \`browser2kodi\` folder.
 
           Then enter your Kodi's address in the options that open. More in the [README](https://github.com/$GITHUB_REPOSITORY#install).
           EOF
           gh release create "$GITHUB_REF_NAME" out/* --title "browser2kodi $VERSION" \
             --notes-file notes.md --generate-notes
+
+  firefox:
+    name: Add the Firefox add-on
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: node
+      - env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          node amo.js "$VERSION" "browser2kodi-$VERSION-firefox.xpi"
+          gh release upload "v$VERSION" "browser2kodi-$VERSION-firefox.xpi" --clobber

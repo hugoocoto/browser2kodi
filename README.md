@@ -11,15 +11,13 @@ Nothing to install on your computer: it talks to Kodi directly.
 
 ## Install
 
-Download it from the [latest release](https://github.com/hugoocoto/browser2kodi/releases/latest).
-
 **Firefox**, LibreWolf, Waterfox, Zen, Floorp (Firefox 140 or later):
 
-1. Open `browser2kodi-…-firefox.xpi` with Firefox, or drag it onto a Firefox window, and click **Add**.
+1. Install it from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/browser2kodi/), or open `browser2kodi-…-firefox.xpi` from the [latest release](https://github.com/hugoocoto/browser2kodi/releases/latest) with Firefox.
 
 **Chrome**, Chromium, Brave, Vivaldi, Edge, Opera, Helium:
 
-1. Unzip `browser2kodi-…-chrome.zip`.
+1. Unzip `browser2kodi-…-chrome.zip` from the [latest release](https://github.com/hugoocoto/browser2kodi/releases/latest).
 2. Open the browser's extensions page, `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the `browser2kodi` folder.
 3. Pin the toolbar button with the puzzle-piece menu 🧩 next to the address bar.
 
@@ -75,10 +73,16 @@ The second runs the extension in each browser it finds, against a fake Kodi on y
 Push a tag with the version in `extension/manifest.json`:
 
 ```sh
-git tag v0.3.0 && git push origin v0.3.0
+git tag v0.3.1 && git push origin v0.3.1
 ```
 
-The [release workflow](.github/workflows/release.yml) tests it, and adds the Chrome zip and the Firefox add-on to a GitHub release. Firefox only installs add-ons signed by Mozilla: for the workflow to have them signed, create an [addons.mozilla.org API key](https://addons.mozilla.org/developers/addon/api/key/) and save it as the repository secrets `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`. The add-on is signed for you to share, not listed on addons.mozilla.org.
+The [release workflow](.github/workflows/release.yml) tests it, submits it to addons.mozilla.org with the listing in `amo-listing.json`, and makes a GitHub release with the Chrome zip and the signed Firefox `.xpi`. It needs an [addons.mozilla.org API key](https://addons.mozilla.org/developers/addon/api/key/) in the repository secrets `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`.
+
+If Mozilla's review takes over half an hour, the release goes out without the `.xpi`. Once approved, add it with:
+
+```sh
+gh workflow run release.yml -f version=0.3.1
+```
 
 ## License
 
