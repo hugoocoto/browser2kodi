@@ -35,16 +35,12 @@ chrome.storage.onChanged.addListener((changes) => {
   if (changes.menu) return buildMenu();
 });
 
-// Exported for the browser tests, which call them in place of a click.
-export function clicked(info, tab) {
+chrome.contextMenus.onClicked.addListener((info, tab) => {
   const [url, hint] = target(info);
   return send(url, tab, { queue: info.menuItemId === "queue", hint });
-}
+});
 
-export const pressed = (tab) => send(tab.url, tab);
-
-chrome.contextMenus.onClicked.addListener(clicked);
-chrome.action.onClicked.addListener(pressed);
+chrome.action.onClicked.addListener((tab) => send(tab.url, tab));
 
 // What to send for a right-click, and what the page shows it as: the
 // picture, video or song itself if it has an address Kodi can open, else the

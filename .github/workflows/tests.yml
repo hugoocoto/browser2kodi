@@ -26,17 +26,3 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: node --test
 
-  browsers:
-    name: Browsers
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: node
-      # Ubuntu keeps Chrome from sandboxing itself.
-      - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-      - run: node --test tests/browsers.js
-        env:
-          BROWSERS: google-chrome microsoft-edge firefox

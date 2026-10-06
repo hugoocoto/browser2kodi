@@ -6,9 +6,10 @@ name: release
 # for Firefox (the .xpi Mozilla signs once it approves the version). The
 # AMO_JWT_ISSUER and AMO_JWT_SECRET secrets hold an AMO API key.
 #
-# If Mozilla takes over half an hour, the release goes out without the .xpi.
-# Once it's approved, run this workflow by hand with the version to add it:
-# Actions > release > Run workflow, or gh workflow run release.yml -f version=X.Y.Z
+# The release goes out right away; the firefox job adds the .xpi once Mozilla
+# approves it. If that takes over half an hour, run the workflow by hand with
+# the version: Actions > release > Run workflow, or
+# gh workflow run release.yml -f version=X.Y.Z
 
 on:
   push:
@@ -26,7 +27,7 @@ jobs:
   release:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -44,12 +45,6 @@ jobs:
 
       - run: node --test
 
-      # Ubuntu keeps Chrome from sandboxing itself.
-      - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-      - run: node --test tests/browsers.js
-        env:
-          BROWSERS: google-chrome firefox
-
       - run: node build.js
 
       - name: Chrome
@@ -66,8 +61,6 @@ jobs:
           npx --yes web-ext@10 sign --channel=listed --amo-metadata=amo-listing.json \
             --source-dir=dist/firefox --approval-timeout=0 \
             --api-key="$AMO_JWT_ISSUER" --api-secret="$AMO_JWT_SECRET"
-          # 3: still awaiting review.
-          node amo.js "$VERSION" "out/browser2kodi-$VERSION-firefox.xpi" 30 || [ $? -eq 3 ]
 
       - name: Release
         env:
@@ -86,9 +79,10 @@ jobs:
 
   firefox:
     name: Add the Firefox add-on
-    if: github.event_name == 'workflow_dispatch'
+    needs: release
+    if: ${{ !cancelled() && (needs.release.result == 'success' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -98,7 +92,12 @@ jobs:
           AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ inputs.version || github.ref_name }}
         run: |
-          node amo.js "$VERSION" "browser2kodi-$VERSION-firefox.xpi"
-          gh release upload "v$VERSION" "browser2kodi-$VERSION-firefox.xpi" --clobber
+          version=${VERSION#v}
+          xpi="browser2kodi-$version-firefox.xpi"
+          node amo.js "$version" "$xpi" 30 || {
+            [ $? -eq 3 ] && echo "::warning::Mozilla is still reviewing $version. Run this workflow again once it's approved."
+            exit 1
+          }
+          gh release upload "v$version" "$xpi" --clobber

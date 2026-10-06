@@ -62,11 +62,10 @@ A notification, plus a badge on the toolbar button: `…` sending, `✓` playing
 ### Tests
 
 ```sh
-node --test                   # against fakes of the browser and Kodi
-node --test tests/browsers.js # in the Chrome- and Firefox-based browsers installed here
+node --test
 ```
 
-The second runs the extension in each browser it finds, against a fake Kodi on your network address. Pick the browsers with `BROWSERS="chromium firefox"`. CI runs both on every push, the second in Chrome, Edge and Firefox.
+These run the extension in Node, against fakes of the browser and Kodi, in under a second. CI runs them on every push.
 
 ### Releases
 
@@ -78,7 +77,7 @@ git tag v0.3.1 && git push origin v0.3.1
 
 The [release workflow](.github/workflows/release.yml) tests it, submits it to addons.mozilla.org with the listing in `amo-listing.json`, and makes a GitHub release with the Chrome zip and the signed Firefox `.xpi`. It needs an [addons.mozilla.org API key](https://addons.mozilla.org/developers/addon/api/key/) in the repository secrets `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`.
 
-If Mozilla's review takes over half an hour, the release goes out without the `.xpi`. Once approved, add it with:
+The `.xpi` is added to the release once Mozilla approves the version, which the workflow waits up to half an hour for. If it takes longer, add it later with:
 
 ```sh
 gh workflow run release.yml -f version=0.3.1
