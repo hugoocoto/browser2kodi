@@ -53,7 +53,7 @@ jobs:
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
         run: |
           if [ -n "$AMO_JWT_ISSUER" ]; then
-            npx --yes web-ext@8 sign --channel=unlisted --source-dir=dist/firefox \
+            npx --yes web-ext@10 sign --channel=unlisted --source-dir=dist/firefox \
               --artifacts-dir=signed --api-key="$AMO_JWT_ISSUER" --api-secret="$AMO_JWT_SECRET"
             cp signed/*.xpi "out/browser2kodi-$VERSION-firefox.xpi"
           else
